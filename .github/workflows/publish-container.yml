@@ -17,14 +17,14 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v4
       - name: Log in to GitHub Docker Registry
-        uses: docker/login@65b78e6e13532edd9afa3aa52ac7964289d1a9c1 # dont have a release tag
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1 # dont have a release tag
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
       - name: Extract metadata like tags and labels from Docker
         id: metadata
-        uses: docker/metada-action@v5
+        uses: docker/metadata-action@v5
         with:
           images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
       - name: Build and push Docker image
