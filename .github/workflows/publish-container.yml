@@ -1,0 +1,46 @@
+name: Create and publish a Docker image
+
+on: push 
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io # Use GitHub Container registry
+      IMAGE_NAME: ${{github.repository}} # name of the container that is built
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login@65b78e6e13532edd9afa3aa52ac7964289d1a9c1 # dont have a release tag
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Extract metadata like tags and labels from Docker
+        id: metadata
+        uses: docker/metada-action@v5
+        with:
+          images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./getting-started-todo-app-main # the files are in this dir
+          push: true
+          tags: ${{steps.metadata.outputs.tags}}
+          labels: ${{steps.metadata.outputs.labels}}
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2 # increase integrity i guess
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+
+
